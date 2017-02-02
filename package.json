@@ -1,0 +1,24 @@
+{
+  "name": "toiletdb",
+  "version": "1.0.0",
+  "description": "flush your json to a file",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maxogden/toiletdb.git"
+  },
+  "keywords": [],
+  "author": "max ogden",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/maxogden/toiletdb/issues"
+  },
+  "homepage": "https://github.com/maxogden/toiletdb#readme",
+  "dependencies": {
+    "debug": "^2.6.0",
+    "last-one-wins": "^1.0.4"
+  }
+}
