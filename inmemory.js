@@ -1,4 +1,5 @@
 module.exports = function (state) {
+  state = state || {}
   return {
     read: function (cb) {
       process.nextTick(function () {
