@@ -6,6 +6,8 @@ module.exports = function (state) {
       })
     },
     write: function (key, data, cb) {
+      if (Buffer.isBuffer(key)) key = key.toString('hex')
+      if (Buffer.isBuffer(data)) data = data.toString('hex')
       state[key] = data || null
       process.nextTick(cb)
     },

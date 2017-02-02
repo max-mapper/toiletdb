@@ -4,6 +4,8 @@ flushes an object to a JSON file. lets you do simple CRUD with async safely with
 
 uses `require('last-one-wins')` to ensure atomicity of CRUD actions
 
+note: if you write Buffers they will be converted to hex strings
+
 ## API
 
 ```js

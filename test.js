@@ -35,6 +35,20 @@ test('write + read', function (t) {
   })
 })
 
+test('write + read buffer', function (t) {
+  reset()
+  var db = toilet(data)
+  db.write(new Buffer('taco'), new Buffer('pizza'), function (err) {
+    t.ifErr(err)
+    t.equals(fs.readFileSync(data).toString(), JSON.stringify({"7461636f":"70697a7a61"}))
+    db.read(function (err, state) {
+      t.ifErr(err)
+      t.equals(JSON.stringify(state), JSON.stringify({"7461636f":"70697a7a61"}))
+      t.end()
+    })
+  })
+})
+
 test('write + delete', function (t) {
   reset()
   var db = toilet(data)
