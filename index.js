@@ -8,14 +8,14 @@ module.exports = function (filename) {
   var write = low(function (writeState, cb) {
     var payload = JSON.stringify(writeState, null, '  ')
     debug('writing', filename, payload)
-    var tmpname = filename + '.' + Math.random();
-    fs.writeFile(tmpname, payload, function(err) {
-      if(err) {
+    var tmpname = filename + '.' + Math.random()
+    fs.writeFile(tmpname, payload, function (err) {
+      if (err) {
         return fs.unlink(tmpname, function () {
-          cb(err);
-        });
+          cb(err)
+        })
       }
-      fs.rename(tmpname, filename, cb);
+      fs.rename(tmpname, filename, cb)
     })
   })
 
