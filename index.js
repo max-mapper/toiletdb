@@ -6,7 +6,7 @@ module.exports = function (filename) {
   var state = {}
 
   var write = low(function (writeState, cb) {
-    var payload = JSON.stringify(writeState)
+    var payload = JSON.stringify(writeState, null, '  ')
     debug('writing', filename, payload)
     fs.writeFile(filename, payload, cb)
   })
