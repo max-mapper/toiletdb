@@ -4,7 +4,7 @@
   "description": "flush your json to a file",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node test.js"
   },
   "repository": {
     "type": "git",
@@ -20,5 +20,8 @@
   "dependencies": {
     "debug": "^2.6.0",
     "last-one-wins": "^1.0.4"
+  },
+  "devDependencies": {
+    "tape": "^4.6.3"
   }
 }

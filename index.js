@@ -2,20 +2,18 @@ var low = require('last-one-wins')
 var fs = require('fs')
 var debug = require('debug')('toiletdb')
 
-module.exports = function (opts) {
-  if (typeof opts === 'string') opts = {name: opts}
-
+module.exports = function (filename) {
   var state = {}
 
   var write = low(function (writeState, cb) {
     var payload = JSON.stringify(writeState)
-    debug('writing', opts.name, payload)
-    fs.writeFile(opts.name, payload, cb)
+    debug('writing', filename, payload)
+    fs.writeFile(filename, payload, cb)
   })
 
   return {
     read: function (cb) {
-      fs.readFile(opts.name, function (err, buf) {
+      fs.readFile(filename, function (err, buf) {
         if (err) {
           if (err.code === 'ENOENT') {
             return cb(null, state)
@@ -26,7 +24,7 @@ module.exports = function (opts) {
         try {
           var jsonString = buf.toString()
           state = JSON.parse(jsonString)
-          debug('reading', opts.name, jsonString)
+          debug('reading', filename, jsonString)
         } catch (e) {
           return cb(e)
         }

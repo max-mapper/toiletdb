@@ -2,10 +2,16 @@
 
 flushes an object to a JSON file. lets you do simple CRUD with async safely with the backend being a flat JSON file
 
-## example
+uses `require('last-one-wins')` to ensure atomicity of CRUD actions
+
+## API
 
 ```js
 var toilet = require('toiletdb')
+// or require the in-memory version if you want
+var db = require('toiletdb/inmemory')
+
+// pass the name of the json file to use
 var db = toilet('./data.json')
 
 db.read(function (err, data) {
