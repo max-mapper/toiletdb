@@ -30,12 +30,14 @@ module.exports = function (filename) {
         cb = key
         key = null
       }
+      function select (obj) {
+        return key ? obj[key] : obj
+      }
       fs.readFile(filename, function (err, buf) {
         if (err) {
           if (err.code === 'ENOENT') {
             // if you read before ever writing
-            var selected = key ? state[key] : state
-            return cb(null, selected)
+            return cb(null, select(state))
           } else {
             return cb(err)
           }
@@ -44,9 +46,8 @@ module.exports = function (filename) {
           // if youre using toiletdb your db needs to fit in a single string
           var jsonString = buf.toString()
           var parsed = JSON.parse(jsonString)
-          var selected = key ? parsed[key] : parsed
           debug('reading', filename, jsonString)
-          return cb(null, selected)
+          return cb(null, select(parsed))
         } catch (e) {
           return cb(e)
         }
