@@ -1,9 +1,14 @@
 module.exports = function (state) {
   state = state || {}
   return {
-    read: function (cb) {
+    read: function (key, cb) {
+      if (typeof key === 'function') {
+        cb = key
+        key = null
+      }
       process.nextTick(function () {
-        cb(null, state)
+        var selected = key ? state[key] : state
+        cb(null, selected)
       })
     },
     write: function (key, data, cb) {
