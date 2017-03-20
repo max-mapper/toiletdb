@@ -35,6 +35,24 @@ test('write + read', function (t) {
   })
 })
 
+test('write + read + update + read', function (t) {
+  reset()
+  var db = toilet(data)
+  db.write('taco', {'cheese': true, 'meat': 'carnitas'}, function (err) {
+    t.ifErr(err)
+    t.equals(fs.readFileSync(data).toString(), JSON.stringify({taco: {'cheese': true, 'meat': 'carnitas'}}, null, '  '))
+    db.read(function (err, state) {
+      t.ifErr(err)
+      t.equals(fs.readFileSync(data).toString(), JSON.stringify({taco: {'cheese': true, 'meat': 'carnitas'}}, null, '  '))
+      db.update('taco', {'cheese': false}, function (err) {
+        t.ifErr(err)
+        t.equals(fs.readFileSync(data).toString(), JSON.stringify({taco: {'cheese': false, 'meat': 'carnitas'}}, null, '  '))
+      t.end()
+      })
+    })
+  })
+})
+
 test('write + read buffer', function (t) {
   reset()
   var db = toilet(data)
