@@ -27,4 +27,8 @@ db.write(key, val, function (err) {
 db.delete(key, function (err) {
   // deletes `key` key from data.json
 })
+
+db.update(key, val, function (err) {
+  // Updates the key with the value using `xtend` for objects
+})
 ```
