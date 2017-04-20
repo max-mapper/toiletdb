@@ -28,3 +28,13 @@ db.delete(key, function (err) {
   // deletes `key` key from data.json
 })
 ```
+
+### Custom FS
+
+```js
+
+// pass the name and custom fs
+var db = toilet({fs: customFs, name: './data.json'})
+
+// write/read as normal
+```

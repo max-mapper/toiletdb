@@ -1,32 +1,40 @@
 var low = require('last-one-wins')
 var fs = require('fs')
+var path = require('path')
 var debug = require('debug')('toiletdb')
 
 module.exports = function (filename) {
   // in memory copy of latest state that functions below mutate
   var state = {}
+  var db = parse(filename)
+  var writeTemp = (typeof filename === 'string') // TODO: ? option
 
   // `low` ensures if write is called multiple times at once the last one will be executed
   // last and call the callback. this works OK because we have `state` above
   var write = low(function (writeState, cb) {
     var payload = JSON.stringify(writeState, null, '  ') // pretty printed
-    debug('writing', filename, payload)
-    
+    debug('writing', db.name, payload)
+
     // write to tempfile first so we know it fully writes to disk and doesnt corrupt existing file
-    var tmpname = filename + '.' + Math.random()
-    fs.writeFile(tmpname, payload, function (err) {
-      if (err) {
-        return fs.unlink(tmpname, function () {
-          cb(err)
-        })
-      }
-      fs.rename(tmpname, filename, cb)
-    })
+    var tmpname = db.name + '.' + Math.random()
+
+    if (writeTemp) {
+      db.fs.writeFile(tmpname, payload, function (err) {
+        if (err) {
+          return db.fs.unlink(tmpname, function () {
+            cb(err)
+          })
+        }
+        db.fs.rename(tmpname, db.name, cb)
+      })
+    } else {
+      db.fs.writeFile(db.name, payload, cb)
+    }
   })
 
   return {
     read: function (cb) {
-      fs.readFile(filename, function (err, buf) {
+      db.fs.readFile(db.name, function (err, buf) {
         if (err) {
           if (err.code === 'ENOENT') {
             // if you read before ever writing
@@ -39,7 +47,7 @@ module.exports = function (filename) {
           // if youre using toiletdb your db needs to fit in a single string
           var jsonString = buf.toString()
           var parsed = JSON.parse(jsonString)
-          debug('reading', filename, jsonString)
+          debug('reading', db.name, jsonString)
           return cb(null, parsed)
         } catch (e) {
           return cb(e)
@@ -59,5 +67,12 @@ module.exports = function (filename) {
       delete state[key]
       write(state, cb)
     }
+  }
+
+  function parse (name) {
+    if (typeof name === 'string') return {name: path.resolve(name), fs: fs}
+    name.name = path.resolve(name.name)
+    if (!name.fs) name.fs = fs
+    return name
   }
 }
