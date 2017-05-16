@@ -19,6 +19,9 @@ var db = toilet('./data.json')
 db.read(function (err, data) {
   // data is from data.json
 })
+db.read(key, function (err, data) {
+  // reads `key` inside data.json
+})
 
 db.write(key, val, function (err) {
   // sets `key` to `val` inside data.json

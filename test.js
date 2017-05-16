@@ -30,7 +30,11 @@ test('write + read', function (t) {
     db.read(function (err, state) {
       t.ifErr(err)
       t.equals(JSON.stringify(state, null, '  '), JSON.stringify({taco: 'pizza'}, null, '  '))
-      t.end()
+      db.read('taco', function (err, state) {
+        t.ifErr(err)
+        t.equals(state, 'pizza')
+        t.end()
+      })
     })
   })
 })
@@ -105,7 +109,11 @@ test('write + read inmemory', function (t) {
     db.read(function (err, state) {
       t.ifErr(err)
       t.equals(JSON.stringify(state), JSON.stringify({taco: 'pizza'}))
-      t.end()
+      db.read('taco', function (err, state) {
+        t.ifErr(err)
+        t.equals(state, 'pizza')
+        t.end()
+      })
     })
   })
 })
