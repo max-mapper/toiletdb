@@ -1,4 +1,4 @@
-# toiletdb
+# toiletdb :toilet:
 
 flushes an object to a JSON file. lets you do simple CRUD with async safely with the backend being a flat JSON file
 
@@ -30,4 +30,14 @@ db.write(key, val, function (err) {
 db.delete(key, function (err) {
   // deletes `key` key from data.json
 })
+```
+
+### Custom FS
+
+```js
+
+// pass the name and custom fs
+var db = toilet({fs: customFs, name: './data.json'})
+
+// write/read as normal
 ```
