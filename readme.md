@@ -1,4 +1,4 @@
-# toiletdb
+# toiletdb :toilet:
 
 flushes an object to a JSON file. lets you do simple CRUD with async safely with the backend being a flat JSON file
 
