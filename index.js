@@ -7,7 +7,7 @@ module.exports = function (filename) {
   // in memory copy of latest state that functions below mutate
   var state = {}
   var db = parse(filename)
-  var writeTemp = (typeof filename === 'string') // TODO: ? option
+  var writeTemp = (typeof filename === 'string') // Only use temp for regular fs. Could expose as option
 
   // `low` ensures if write is called multiple times at once the last one will be executed
   // last and call the callback. this works OK because we have `state` above
@@ -15,10 +15,9 @@ module.exports = function (filename) {
     var payload = JSON.stringify(writeState, null, '  ') // pretty printed
     debug('writing', db.name, payload)
 
-    // write to tempfile first so we know it fully writes to disk and doesnt corrupt existing file
-    var tmpname = db.name + '.' + Math.random()
-
     if (writeTemp) {
+      // write to tempfile first so we know it fully writes to disk and doesnt corrupt existing file
+      var tmpname = db.name + '.' + Math.random()
       db.fs.writeFile(tmpname, payload, function (err) {
         if (err) {
           return db.fs.unlink(tmpname, function () {
