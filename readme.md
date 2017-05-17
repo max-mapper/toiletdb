@@ -30,6 +30,12 @@ db.write(key, val, function (err) {
 db.delete(key, function (err) {
   // deletes `key` key from data.json
 })
+
+db.flush(function (err) {
+  // deletes everything from data.json  
+})
+// synchronous version
+db.flushSync()
 ```
 
 ### Custom FS
