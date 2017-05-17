@@ -138,3 +138,91 @@ test('write + delete inmemory', function (t) {
     })
   })
 })
+
+test('flush', function (t) {
+  reset()
+  var db = toilet(data)
+  db.write('taco', 'pizza', function (err) {
+    t.ifErr(err)
+    db.flush(function (err) {
+      t.ifErr(err)
+      db.read(function (err, state) {
+        t.ifErr(err)
+        t.deepEquals(state, {})
+        db.write('muffin', 'walrus', function (err) {
+          t.ifErr(err)
+          db.read(function (err, state) {
+            t.ifErr(err)
+            t.deepEquals(state, { muffin: 'walrus' })
+            t.end()
+          })
+        })
+      })
+    })
+  })
+})
+
+test('flushSync', function (t) {
+  reset()
+  var db = toilet(data)
+  db.write('taco', 'pizza', function (err) {
+    t.ifErr(err)
+    db.flushSync()
+    db.read(function (err, state) {
+      t.ifErr(err)
+      t.deepEquals(state, {})
+      db.write('muffin', 'walrus', function (err) {
+        t.ifErr(err)
+        db.read(function (err, state) {
+          t.ifErr(err)
+          t.deepEquals(state, { muffin: 'walrus' })
+          t.end()
+        })
+      })
+    })
+  })
+})
+
+test('flush inmemory', function (t) {
+  reset()
+  var db = inmemory()
+  db.write('taco', 'pizza', function (err) {
+    t.ifErr(err)
+    db.flush(function (err) {
+      t.ifErr(err)
+      db.read(function (err, state) {
+        t.ifErr(err)
+        t.deepEquals(state, {})
+        db.write('muffin', 'walrus', function (err) {
+          t.ifErr(err)
+          db.read(function (err, state) {
+            t.ifErr(err)
+            t.deepEquals(state, { muffin: 'walrus' })
+            t.end()
+          })
+        })
+      })
+    })
+  })
+})
+
+test('flushSync inmemory', function (t) {
+  reset()
+  var db = inmemory()
+  db.write('taco', 'pizza', function (err) {
+    t.ifErr(err)
+    db.flushSync()
+    db.read(function (err, state) {
+      t.ifErr(err)
+      t.deepEquals(state, {})
+      db.write('muffin', 'walrus', function (err) {
+        t.ifErr(err)
+        db.read(function (err, state) {
+          t.ifErr(err)
+          t.deepEquals(state, { muffin: 'walrus' })
+          t.end()
+        })
+      })
+    })
+  })
+})

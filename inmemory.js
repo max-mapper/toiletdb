@@ -20,6 +20,13 @@ module.exports = function (state) {
     delete: function (key, cb) {
       delete state[key]
       process.nextTick(cb)
+    },
+    flush: function (cb) {
+      state = {}
+      process.nextTick(cb)
+    },
+    flushSync: function () {
+      state = {}
     }
   }
 }

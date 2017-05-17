@@ -75,6 +75,14 @@ module.exports = function (filename) {
       if (Buffer.isBuffer(key)) key = key.toString('hex')
       delete state[key]
       write(state, cb)
+    },
+    flush: function (cb) {
+      state = {}
+      db.fs.unlink(db.name, cb)
+    },
+    flushSync: function () {
+      state = {}
+      db.fs.unlinkSync(db.name)
     }
   }
 
