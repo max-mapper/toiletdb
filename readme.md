@@ -16,6 +16,10 @@ var db = require('toiletdb/inmemory')
 // pass the name of the json file to use
 var db = toilet('./data.json')
 
+db.open(function (err) {
+  // open the db
+})
+
 db.read(function (err, data) {
   // data is from data.json
 })
