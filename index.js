@@ -32,6 +32,17 @@ module.exports = function (filename) {
   })
 
   return {
+    open: function (cb) {
+      db.fs.readFile(db.name, function (err, buf) {
+        if (err) return cb()
+        try {
+          // if youre using toiletdb your db needs to fit in a single string
+          state = JSON.parse(buf.toString())
+        } catch (_) {
+        }
+        cb()
+      })
+    },
     read: function (key, cb) {
       if (typeof key === 'function') {
         cb = key

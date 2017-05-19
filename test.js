@@ -226,3 +226,57 @@ test('flushSync inmemory', function (t) {
     })
   })
 })
+
+test('read initial state', function (t) {
+  t.plan(6)
+  reset()
+  var db = toilet(data)
+  db.open(function (err) {
+    t.error(err)
+    db.write('foo', 'bar', function (err) {
+      t.error(err)
+      db = toilet(data)
+      db.open(function (err) {
+        t.error(err)
+        db.write('beep', 'boop', function (err) {
+          t.error(err)
+          db.read(function (err, state) {
+            t.error(err)
+            t.deepEqual(state, {
+              foo: 'bar',
+              beep: 'boop'
+            })
+            t.end()
+          })
+        })
+      })
+    })
+  })
+})
+
+test('read initial state inmemory', function (t) {
+  t.plan(6)
+  var state = {}
+  var db = inmemory(state)
+  db.open(function (err) {
+    t.error(err)
+    db.write('foo', 'bar', function (err) {
+      t.error(err)
+      db = inmemory(state)
+      db.open(function (err) {
+        t.error(err)
+        db.write('beep', 'boop', function (err) {
+          t.error(err)
+          db.read(function (err, state) {
+            t.error(err)
+            t.deepEqual(state, {
+              foo: 'bar',
+              beep: 'boop'
+            })
+            t.end()
+          })
+        })
+      })
+    })
+  })
+})

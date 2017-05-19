@@ -1,6 +1,9 @@
 module.exports = function (state) {
   state = state || {}
   return {
+    open: function (cb) {
+      process.nextTick(cb)
+    },
     read: function (key, cb) {
       if (typeof key === 'function') {
         cb = key
