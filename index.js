@@ -32,35 +32,25 @@ module.exports = function (filename) {
   })
 
   return {
+    init: function (cb) {
+      db.fs.readFile(db.name, function (err, buf) {
+        if (err) return cb()
+        try {
+          // if youre using toiletdb your db needs to fit in a single string
+          state = JSON.parse(buf.toString())
+        } catch (_) {
+        }
+        cb()
+      })
+    },
     read: function (key, cb) {
       if (typeof key === 'function') {
         cb = key
         key = null
       }
   
-      db.fs.readFile(db.name, function (err, buf) {
-        if (err) {
-          if (err.code === 'ENOENT') {
-            // if you read before ever writing
-            return cb(null, select(state))
-          } else {
-            return cb(err)
-          }
-        }
-        
-        try {
-          // if youre using toiletdb your db needs to fit in a single string
-          var jsonString = buf.toString()
-          var parsed = JSON.parse(jsonString)
-          debug('reading', db.name, jsonString)
-          return cb(null, select(parsed))
-        } catch (e) {
-          return cb(e)
-        }
-        
-        function select (obj) {
-          return key ? obj[key] : obj
-        }
+      setTimeout(function () {
+        cb(null, key ? state[key] : state)
       })
     },
     write: function (key, data, cb) {
