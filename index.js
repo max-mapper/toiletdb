@@ -48,7 +48,7 @@ module.exports = function (filename) {
         cb = key
         key = null
       }
-  
+
       db.fs.readFile(db.name, function (err, buf) {
         if (err) {
           if (err.code === 'ENOENT') {
@@ -58,7 +58,7 @@ module.exports = function (filename) {
             return cb(err)
           }
         }
-        
+
         try {
           // if youre using toiletdb your db needs to fit in a single string
           var jsonString = buf.toString()
@@ -68,7 +68,7 @@ module.exports = function (filename) {
         } catch (e) {
           return cb(e)
         }
-        
+
         function select (obj) {
           return key ? obj[key] : obj
         }
