@@ -1,6 +1,6 @@
 {
   "name": "toiletdb",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "flush your json to a file",
   "main": "index.js",
   "scripts": {
