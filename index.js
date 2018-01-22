@@ -24,7 +24,15 @@ module.exports = function (filename) {
             cb(err)
           })
         }
-        db.fs.rename(tmpname, db.name, cb)
+        db.fs.stat(db.name, function (err) {
+          if (err) return rename(null)
+          db.fs.unlink(db.name, rename)
+        })
+
+        function rename (err) {
+          if (err) return cb(err)
+          db.fs.rename(tmpname, db.name, cb)
+        }
       })
     } else {
       db.fs.writeFile(db.name, payload, cb)
