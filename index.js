@@ -1,23 +1,23 @@
-var low = require('last-one-wins')
-var fs = require('fs')
-var path = require('path')
-var debug = require('debug')('toiletdb')
+const low = require('last-one-wins')
+const fs = require('fs')
+const path = require('path')
+const debug = require('debug')('toiletdb')
 
 module.exports = function (filename) {
   // in memory copy of latest state that functions below mutate
-  var state = {}
-  var db = parse(filename)
-  var writeTemp = (typeof filename === 'string') // Only use temp for regular fs. Could expose as option
+  let state = {}
+  const db = parse(filename)
+  const writeTemp = (typeof filename === 'string') // Only use temp for regular fs. Could expose as option
 
   // `low` ensures if write is called multiple times at once the last one will be executed
   // last and call the callback. this works OK because we have `state` above
-  var write = low(function (writeState, cb) {
-    var payload = JSON.stringify(writeState, null, '  ') // pretty printed
+  const write = low(function (writeState, cb) {
+    const payload = JSON.stringify(writeState, null, '  ') // pretty printed
     debug('writing', db.name, payload)
 
     if (writeTemp) {
       // write to tempfile first so we know it fully writes to disk and doesnt corrupt existing file
-      var tmpname = db.name + '.' + Math.random()
+      const tmpname = db.name + '.' + Math.random()
       db.fs.writeFile(tmpname, payload, function (err) {
         if (err) {
           return db.fs.unlink(tmpname, function () {
@@ -40,64 +40,78 @@ module.exports = function (filename) {
   })
 
   return {
-    open: function (cb) {
-      db.fs.readFile(db.name, function (err, buf) {
-        if (err) return cb()
-        try {
-          // if youre using toiletdb your db needs to fit in a single string
-          state = JSON.parse(buf.toString())
-        } catch (_) {
-        }
-        cb()
-      })
-    },
-    read: function (key, cb) {
-      if (typeof key === 'function') {
-        cb = key
-        key = null
-      }
-
-      db.fs.readFile(db.name, function (err, buf) {
-        if (err) {
-          if (err.code === 'ENOENT') {
-            // if you read before ever writing
-            return cb(null, select(state))
-          } else {
-            return cb(err)
+    open: function () {
+      return new Promise((resolve, reject) => {
+        db.fs.readFile(db.name, function (err, buf) {
+          if (err) return resolve() // file does not exist, will write later
+          try {
+            // if youre using toiletdb your db needs to fit in a single string
+            state = JSON.parse(buf.toString())
+          } catch (_) {
           }
-        }
-
-        try {
-          // if youre using toiletdb your db needs to fit in a single string
-          var jsonString = buf.toString()
-          var parsed = JSON.parse(jsonString)
-          debug('reading', db.name, jsonString)
-          return cb(null, select(parsed))
-        } catch (e) {
-          return cb(e)
-        }
-
-        function select (obj) {
-          return key ? obj[key] : obj
-        }
+          resolve()
+        })
       })
     },
-    write: function (key, data, cb) {
-      // json doesnt support binary
-      if (Buffer.isBuffer(key)) key = key.toString('hex')
-      if (Buffer.isBuffer(data)) data = data.toString('hex')
-      // the '|| null' is because JSON.stringify deletes keys with `undefined` values
-      state[key] = data || null
-      write(state, cb)
+    read: function (key) {
+      return new Promise((resolve, reject) => {
+        db.fs.readFile(db.name, function (err, buf) {
+          if (err) {
+            if (err.code === 'ENOENT') {
+              // if you read before ever writing
+              return resolve(select(state))
+            } else {
+              return reject(err)
+            }
+          }
+
+          try {
+            // if youre using toiletdb your db needs to fit in a single string
+            var jsonString = buf.toString()
+            var parsed = JSON.parse(jsonString)
+            debug('reading', db.name, jsonString)
+            return resolve(select(parsed))
+          } catch (e) {
+            return reject(e)
+          }
+
+          function select (obj) {
+            return key ? obj[key] : obj
+          }
+        })
+      })
     },
-    delete: function (key, cb) {
-      if (Buffer.isBuffer(key)) key = key.toString('hex')
-      delete state[key]
-      write(state, cb)
+    write: function (key, data) {
+      return new Promise((resolve, reject) => {
+        // json doesnt support binary
+        if (Buffer.isBuffer(key)) key = key.toString('hex')
+        if (Buffer.isBuffer(data)) data = data.toString('hex')
+        // the '|| null' is because JSON.stringify deletes keys with `undefined` values
+        state[key] = data || null
+        write(state, (err) => {
+          if (err) return reject(err)
+          resolve()
+        })
+      })
     },
-    flush: function (cb) {
-      state = {}
-      db.fs.unlink(db.name, cb)
+    delete: function (key) {
+      return new Promise((resolve, reject) => {
+        if (Buffer.isBuffer(key)) key = key.toString('hex')
+        delete state[key]
+        write(state, (err) => {
+          if (err) return reject(err)
+          resolve()
+        })
+      })
+    },
+    flush: function () {
+      return new Promise((resolve, reject) => {
+        state = {}
+        db.fs.unlink(db.name, (err) => {
+          if (err) return reject(err)
+          resolve()
+        })
+      })
     },
     flushSync: function () {
       state = {}
@@ -106,7 +120,7 @@ module.exports = function (filename) {
   }
 
   function parse (name) {
-    if (typeof name === 'string') return {name: path.resolve(name), fs: fs}
+    if (typeof name === 'string') return { name: path.resolve(name), fs: fs }
     name.name = path.resolve(name.name)
     if (!name.fs) name.fs = fs
     return name
