@@ -4,7 +4,7 @@
   "description": "flush your json to a file",
   "main": "index.js",
   "scripts": {
-    "test": "node test.js"
+    "test": "standard && node test.js"
   },
   "repository": {
     "type": "git",
@@ -18,10 +18,11 @@
   },
   "homepage": "https://github.com/maxogden/toiletdb#readme",
   "dependencies": {
-    "debug": "^2.6.0",
+    "debug": "^4.1.1",
     "last-one-wins": "^1.0.4"
   },
   "devDependencies": {
-    "tape": "^4.6.3"
+    "standard": "^12.0.1",
+    "tape": "^4.10.1"
   }
 }

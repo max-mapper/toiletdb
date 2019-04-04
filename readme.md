@@ -16,28 +16,23 @@ var db = require('toiletdb/inmemory')
 // pass the name of the json file to use
 var db = toilet('./data.json')
 
-db.open(function (err) {
-  // open the db
-})
+// open the db
+await db.open()
 
-db.read(function (err, data) {
-  // data is from data.json
-})
-db.read(key, function (err, data) {
-  // reads `key` inside data.json
-})
+// read data from data.json
+var data = await db.read()
+// read `key` inside data.json
+var value = await db.read(key)
 
-db.write(key, val, function (err) {
-  // sets `key` to `val` inside data.json
-})
+// sets `key` to `val` inside data.json
+await db.write(key, val)
 
-db.delete(key, function (err) {
-  // deletes `key` key from data.json
-})
+// deletes `key` key from data.json
+await db.delete(key)
 
-db.flush(function (err) {
-  // deletes everything from data.json  
-})
+// deletes everything from data.json  
+await db.flush()
+
 // synchronous version
 db.flushSync()
 ```

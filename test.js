@@ -1,9 +1,9 @@
-var fs = require('fs')
-var test = require('tape')
-var toilet = require('./')
-var inmemory = require('./inmemory')
+const fs = require('fs')
+const test = require('tape')
+const toilet = require('./')
+const inmemory = require('./inmemory')
 
-var data = './teststate.json'
+const DB_FILE = './teststate.json'
 
 function reset () {
   try {
@@ -11,272 +11,250 @@ function reset () {
   } catch (e) {}
 }
 
-test('write', function (t) {
+test('write', async function (t) {
   reset()
-  var db = toilet(data)
-  db.write('foo', 'bar', function (err) {
-    t.ifErr(err)
-    t.equals(fs.readFileSync(data).toString(), JSON.stringify({foo: 'bar'}, null, '  '))
-    t.end()
-  })
+  const db = toilet(DB_FILE)
+  try {
+    await db.write('foo', 'bar')
+  } catch (e) {
+    t.ifErr(e)
+  }
+
+  t.equals(fs.readFileSync(DB_FILE).toString(), JSON.stringify({ foo: 'bar' }, null, '  '))
+  t.end()
 })
 
-test('write + read', function (t) {
+test('write + read', async function (t) {
   reset()
-  var db = toilet(data)
-  db.write('taco', 'pizza', function (err) {
-    t.ifErr(err)
-    t.equals(fs.readFileSync(data).toString(), JSON.stringify({taco: 'pizza'}, null, '  '))
-    db.read(function (err, state) {
-      t.ifErr(err)
-      t.equals(JSON.stringify(state, null, '  '), JSON.stringify({taco: 'pizza'}, null, '  '))
-      db.read('taco', function (err, state) {
-        t.ifErr(err)
-        t.equals(state, 'pizza')
-        t.end()
-      })
-    })
-  })
+  const db = toilet(DB_FILE)
+  try {
+    await db.write('taco', 'pizza')
+    t.equals(fs.readFileSync(DB_FILE).toString(), JSON.stringify({ taco: 'pizza' }, null, '  '))
+
+    const state = await db.read()
+    const val = await db.read('taco')
+    t.equals(JSON.stringify(state, null, '  '), JSON.stringify({ taco: 'pizza' }, null, '  '))
+    t.equals(val, 'pizza')
+  } catch (e) {
+    t.ifErr(e)
+  }
+  t.end()
 })
 
-test('write + read buffer', function (t) {
+test('write + read buffer', async function (t) {
   reset()
-  var db = toilet(data)
-  db.write(new Buffer('taco'), new Buffer('pizza'), function (err) {
-    t.ifErr(err)
-    t.equals(fs.readFileSync(data).toString(), JSON.stringify({"7461636f":"70697a7a61"}, null, '  '))
-    db.read(function (err, state) {
-      t.ifErr(err)
-      t.equals(JSON.stringify(state, null, '  '), JSON.stringify({"7461636f":"70697a7a61"}, null, '  '))
-      t.end()
-    })
-  })
+  const db = toilet(DB_FILE)
+  try {
+    await db.write(Buffer.from('taco'), Buffer.from('pizza'))
+    t.equals(fs.readFileSync(DB_FILE).toString(), JSON.stringify({ '7461636f': '70697a7a61' }, null, '  '))
+
+    const state = await db.read()
+    t.equals(JSON.stringify(state, null, '  '), JSON.stringify({ '7461636f': '70697a7a61' }, null, '  '))
+  } catch (e) {
+    t.ifErr(e)
+  }
+  t.end()
 })
 
-test('write + read buffer inmemory', function (t) {
-  reset()
-  var storage = {}
-  var db = inmemory(storage)
-  db.write(new Buffer('taco'), new Buffer('pizza'), function (err) {
-    t.ifErr(err)
-    t.equals(JSON.stringify(storage), JSON.stringify({"7461636f":"70697a7a61"}))
-    db.read(function (err, state) {
-      t.ifErr(err)
-      t.equals(JSON.stringify(state), JSON.stringify({"7461636f":"70697a7a61"}))
-      t.end()
-    })
-  })
+test('write + read buffer inmemory', async function (t) {
+  const storage = {}
+  const db = inmemory(storage)
+  try {
+    await db.write(Buffer.from('taco'), Buffer.from('pizza'))
+    const state = await db.read()
+    t.equals(JSON.stringify(state, null, '  '), JSON.stringify({ '7461636f': '70697a7a61' }, null, '  '))
+  } catch (e) {
+    t.ifErr(e)
+  }
+  t.end()
 })
 
-test('write + delete', function (t) {
+test('write + delete', async function (t) {
   reset()
-  var db = toilet(data)
-  db.write('taco', 'pizza', function (err) {
+  const db = toilet(DB_FILE)
+
+  try {
+    await db.write('taco', 'pizza')
+    await db.write('muffin', 'walrus')
+    t.equals(fs.readFileSync(DB_FILE).toString(), JSON.stringify({ taco: 'pizza', muffin: 'walrus' }, null, '  '))
+
+    await db.delete('taco')
+    const state = await db.read()
+    t.equals(JSON.stringify(state, null, '  '), JSON.stringify({ muffin: 'walrus' }, null, '  '))
+  } catch (err) {
     t.ifErr(err)
-    db.write('muffin', 'walrus', function (err) {
-      t.ifErr(err)
-      t.equals(fs.readFileSync(data).toString(), JSON.stringify({taco: 'pizza', muffin: 'walrus'}, null, '  '))
-      db.delete('taco', function (err) {
-        t.ifErr(err)
-        db.read(function (err, state) {
-          t.ifErr(err)
-          t.equals(JSON.stringify(state, null, '  '), JSON.stringify({muffin: 'walrus'}, null, '  '))
-          t.end()
-        })
-      })
-    })
-  })
+  }
+
+  t.end()
 })
 
-test('write inmemory', function (t) {
-  reset()
-  var storage = {}
-  var db = inmemory(storage)
-  db.write('foo', 'bar', function (err) {
-    t.ifErr(err)
-    t.equals(JSON.stringify(storage), JSON.stringify({foo: 'bar'}))
-    t.end()
-  })
+test('write inmemory', async function (t) {
+  const storage = {}
+  const db = inmemory(storage)
+  try {
+    await db.write('foo', 'bar')
+    t.equals(JSON.stringify(storage), JSON.stringify({ foo: 'bar' }))
+  } catch (e) {
+    t.ifErr(e)
+  }
+  t.end()
 })
 
-test('write + read inmemory', function (t) {
+test('write + read inmemory', async function (t) {
   reset()
-  var storage = {}
-  var db = inmemory(storage)
-  db.write('taco', 'pizza', function (err) {
-    t.ifErr(err)
-    t.equals(JSON.stringify(storage), JSON.stringify({taco: 'pizza'}))
-    db.read(function (err, state) {
-      t.ifErr(err)
-      t.equals(JSON.stringify(state), JSON.stringify({taco: 'pizza'}))
-      db.read('taco', function (err, state) {
-        t.ifErr(err)
-        t.equals(state, 'pizza')
-        t.end()
-      })
-    })
-  })
+  const storage = {}
+  const db = inmemory(storage)
+
+  try {
+    await db.write('taco', 'pizza')
+    t.equals(JSON.stringify(storage), JSON.stringify({ taco: 'pizza' }))
+
+    const state = await db.read()
+    const value = await db.read('taco')
+
+    t.equals(JSON.stringify(state), JSON.stringify({ taco: 'pizza' }))
+    t.equals(value, 'pizza')
+  } catch (e) {
+    t.ifErr(e)
+  }
+
+  t.end()
 })
 
-test('write + delete inmemory', function (t) {
+test('write + delete inmemory', async function (t) {
   reset()
-  var storage = {}
-  var db = inmemory(storage)
-  db.write('taco', 'pizza', function (err) {
+  const storage = {}
+  const db = inmemory(storage)
+  try {
+    await db.write('taco', 'pizza')
+    await db.write('muffin', 'walrus')
+    t.equals(JSON.stringify(storage), JSON.stringify({ taco: 'pizza', muffin: 'walrus' }))
+
+    await db.delete('taco')
+    const state = await db.read()
+    t.equals(JSON.stringify(state), JSON.stringify({ muffin: 'walrus' }))
+  } catch (err) {
     t.ifErr(err)
-    db.write('muffin', 'walrus', function (err) {
-      t.ifErr(err)
-      t.equals(JSON.stringify(storage), JSON.stringify({taco: 'pizza', muffin: 'walrus'}))
-      db.delete('taco', function (err) {
-        t.ifErr(err)
-        db.read(function (err, state) {
-          t.ifErr(err)
-          t.equals(JSON.stringify(state), JSON.stringify({muffin: 'walrus'}))
-          t.end()
-        })
-      })
-    })
-  })
+  }
+  t.end()
 })
 
-test('flush', function (t) {
+test('flush', async function (t) {
   reset()
-  var db = toilet(data)
-  db.write('taco', 'pizza', function (err) {
-    t.ifErr(err)
-    db.flush(function (err) {
-      t.ifErr(err)
-      db.read(function (err, state) {
-        t.ifErr(err)
-        t.deepEquals(state, {})
-        db.write('muffin', 'walrus', function (err) {
-          t.ifErr(err)
-          db.read(function (err, state) {
-            t.ifErr(err)
-            t.deepEquals(state, { muffin: 'walrus' })
-            t.end()
-          })
-        })
-      })
-    })
-  })
+  const db = toilet(DB_FILE)
+
+  try {
+    await db.write('taco', 'pizza')
+    await db.flush()
+
+    let state = await db.read()
+    t.deepEquals(state, {})
+
+    await db.write('muffin', 'walrus')
+    state = await db.read()
+    t.deepEquals(state, { muffin: 'walrus' })
+  } catch (e) {
+    t.ifErr(e)
+  }
+  t.end()
 })
 
-test('flushSync', function (t) {
+test('flushSync', async function (t) {
   reset()
-  var db = toilet(data)
-  db.write('taco', 'pizza', function (err) {
-    t.ifErr(err)
+  const db = toilet(DB_FILE)
+  try {
+    await db.write('taco', 'pizza')
     db.flushSync()
-    db.read(function (err, state) {
-      t.ifErr(err)
-      t.deepEquals(state, {})
-      db.write('muffin', 'walrus', function (err) {
-        t.ifErr(err)
-        db.read(function (err, state) {
-          t.ifErr(err)
-          t.deepEquals(state, { muffin: 'walrus' })
-          t.end()
-        })
-      })
-    })
-  })
+    let state = await db.read()
+    t.deepEquals(state, {})
+
+    await db.write('muffin', 'walrus')
+    state = await db.read()
+    t.deepEquals(state, { muffin: 'walrus' })
+  } catch (e) {
+    t.ifErr(e)
+  }
+  t.end()
 })
 
-test('flush inmemory', function (t) {
-  reset()
-  var db = inmemory()
-  db.write('taco', 'pizza', function (err) {
-    t.ifErr(err)
-    db.flush(function (err) {
-      t.ifErr(err)
-      db.read(function (err, state) {
-        t.ifErr(err)
-        t.deepEquals(state, {})
-        db.write('muffin', 'walrus', function (err) {
-          t.ifErr(err)
-          db.read(function (err, state) {
-            t.ifErr(err)
-            t.deepEquals(state, { muffin: 'walrus' })
-            t.end()
-          })
-        })
-      })
-    })
-  })
+test('flush inmemory', async function (t) {
+  const db = inmemory()
+  try {
+    await db.write('taco', 'pizza')
+    await db.flush()
+
+    let state = await db.read()
+    t.deepEquals(state, {})
+
+    await db.write('muffin', 'walrus')
+    state = await db.read()
+    t.deepEquals(state, { muffin: 'walrus' })
+  } catch (e) {
+    t.ifErr(e)
+  }
+  t.end()
 })
 
-test('flushSync inmemory', function (t) {
-  reset()
-  var db = inmemory()
-  db.write('taco', 'pizza', function (err) {
-    t.ifErr(err)
+test('flushSync inmemory', async function (t) {
+  const db = inmemory()
+
+  try {
+    await db.write('taco', 'pizza')
     db.flushSync()
-    db.read(function (err, state) {
-      t.ifErr(err)
-      t.deepEquals(state, {})
-      db.write('muffin', 'walrus', function (err) {
-        t.ifErr(err)
-        db.read(function (err, state) {
-          t.ifErr(err)
-          t.deepEquals(state, { muffin: 'walrus' })
-          t.end()
-        })
-      })
-    })
-  })
+    let state = await db.read()
+    t.deepEquals(state, {})
+
+    await db.write('muffin', 'walrus')
+    state = await db.read()
+    t.deepEquals(state, { muffin: 'walrus' })
+  } catch (e) {
+    t.ifErr(e)
+  }
+  t.end()
 })
 
-test('read initial state', function (t) {
-  t.plan(6)
+test('read initial state', async function (t) {
   reset()
-  var db = toilet(data)
-  db.open(function (err) {
-    t.error(err)
-    db.write('foo', 'bar', function (err) {
-      t.error(err)
-      db = toilet(data)
-      db.open(function (err) {
-        t.error(err)
-        db.write('beep', 'boop', function (err) {
-          t.error(err)
-          db.read(function (err, state) {
-            t.error(err)
-            t.deepEqual(state, {
-              foo: 'bar',
-              beep: 'boop'
-            })
-            t.end()
-          })
-        })
-      })
+  let db = toilet(DB_FILE)
+
+  try {
+    await db.open()
+    await db.write('foo', 'bar')
+
+    db = toilet(DB_FILE)
+    await db.open()
+    await db.write('beep', 'boop')
+    const state = await db.read()
+    t.deepEqual(state, {
+      foo: 'bar',
+      beep: 'boop'
     })
-  })
+  } catch (e) {
+    t.error(e)
+  }
+
+  t.end()
 })
 
-test('read initial state inmemory', function (t) {
-  t.plan(6)
-  var state = {}
-  var db = inmemory(state)
-  db.open(function (err) {
-    t.error(err)
-    db.write('foo', 'bar', function (err) {
-      t.error(err)
-      db = inmemory(state)
-      db.open(function (err) {
-        t.error(err)
-        db.write('beep', 'boop', function (err) {
-          t.error(err)
-          db.read(function (err, state) {
-            t.error(err)
-            t.deepEqual(state, {
-              foo: 'bar',
-              beep: 'boop'
-            })
-            t.end()
-          })
-        })
-      })
+test('read initial state inmemory', async function (t) {
+  let state = {}
+  let db = inmemory(state)
+
+  try {
+    await db.open()
+    await db.write('foo', 'bar')
+
+    db = inmemory(state)
+    await db.open()
+    await db.write('beep', 'boop')
+    state = await db.read()
+    t.deepEqual(state, {
+      foo: 'bar',
+      beep: 'boop'
     })
-  })
+  } catch (e) {
+    t.error(e)
+  }
+
+  t.end()
 })
